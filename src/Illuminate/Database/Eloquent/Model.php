@@ -23,7 +23,8 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
         Concerns\HasRelationships,
         Concerns\HasTimestamps,
         Concerns\HidesAttributes,
-        Concerns\GuardsAttributes;
+        Concerns\GuardsAttributes,
+        Concerns\HasFillableRelations;
 
     /**
      * The connection name for the model.
@@ -213,6 +214,8 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
     {
         $totallyGuarded = $this->totallyGuarded();
 
+        list($fillableRelationsData, $attributes) = $this->extractFillableRelations($attributes);
+
         foreach ($this->fillableFromArray($attributes) as $key => $value) {
             $key = $this->removeTableFromKey($key);
 
@@ -225,6 +228,8 @@ abstract class Model implements ArrayAccess, Arrayable, Jsonable, JsonSerializab
                 throw new MassAssignmentException($key);
             }
         }
+
+        $this->fillRelations($fillableRelationsData);
 
         return $this;
     }
