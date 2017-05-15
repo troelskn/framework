@@ -3,6 +3,7 @@
 namespace Illuminate\Database\Eloquent\Concerns;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use RuntimeException;
@@ -42,6 +43,13 @@ trait HasFillableRelations
             if ($relation instanceof BelongsTo) {
                 $entity = $klass::where($fillableData)->firstOrFail();
                 $relation->associate($entity);
+            } elseif ($relation instanceof HasOne) {
+                $entity = $klass::firstOrCreate($fillable_data);
+                $qualified_foreign_key = $relation->getForeignKey();
+                list($table, $foreign_key) = explode('.', $qualified_foreign_key);
+                $qualified_local_key_name = $relation->getQualifiedParentKeyName();
+                list($table, $local_key) = explode('.', $qualified_local_key_name);
+                $this->{$local_key} = $entity->{$foreign_key};
             } elseif ($relation instanceof HasMany) {
                 if (!$this->exists) {
                     $this->save();
